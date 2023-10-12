@@ -10,24 +10,22 @@ def file_read(filename):
         text = f.read().lower()
     return text
 
+
 text = file_read('Mertvye_dushi.txt')
 
-
 def text_for_lab(text, space):
+    text = text.lower()
+    text = text.replace('ё', 'е').replace('ъ', 'ь')
     if space:
-        text = text.lower()
-        text = text.replace('ё', 'е').replace('ъ', 'ь')
-        text = re.sub(r'[^а-я]', ' ', text)
+        text = re.sub(r'[^а-я ]', '', text)
     if not space:
-        text = text.lower()
-        text = text.replace('ё', 'е').replace('ъ', 'ь')
-        text = re.sub(r'[^а-я]', ' ', text)
-        text = re.sub(' ', '', text)
+        text = re.sub(r'[^а-я]', '', text)
     return text
 
 
 text_no_spaces = text_for_lab(text, False)
 text_spaces = text_for_lab(text, True)
+
 
 def monogram(text, space=True):
     if space:
@@ -45,6 +43,7 @@ def monogram(text, space=True):
     
     return monogram_frequency
 
+
 def write_file(filename, dictionary):
     with open(filename, 'w', encoding='utf-8') as f:
         for key, value in dictionary.items():
@@ -54,32 +53,25 @@ def write_file(filename, dictionary):
 def bigram(dictionary, intersections):
     bigram_frequency = {}
     if intersections:
-        bigram_list = [dictionary[i:i + 2] for i in range(len(dictionary))]
-        bigram_unique_list = list(set(bigram_list))
-        count_b = collections.Counter(bigram_list)
-        for i in bigram_unique_list:
-            bigram_frequency[i] = round(count_b[i] / len(bigram_list), 10)
+        bigram_list = [dictionary[i:i + 2] for i in range(len(dictionary))] 
         
     if not intersections:
         bigram_list = [dictionary[i:i + 2] for i in range(0, len(dictionary), 2)]
-        bigram_unique_list = list(set(bigram_list))
-        count_b = collections.Counter(bigram_list)
-        for i in bigram_unique_list:
-            bigram_frequency[i] = round(count_b[i] / len(bigram_list), 10)
-        
+    
+    bigram_unique_list = list(set(bigram_list))
+    count_b = collections.Counter(bigram_list)
+    for i in bigram_unique_list:
+        bigram_frequency[i] = round(count_b[i] / len(bigram_list), 10)
+
     return bigram_frequency
 
-def entropy_h1(dictionary):
-    entropy_h1 = 0
-    for i in dictionary.keys():
-        entropy_h1 -= dictionary[i] * math.log2(dictionary[i])
-    return entropy_h1
 
-def entropy_h2(dictionary):
-    entropy_h2 = 0
+def entropy_hn(dictionary, n):
+    entropy_h = 0
     for i in dictionary.keys():
-        entropy_h2 -= dictionary[i] * math.log2(dictionary[i])
-    return entropy_h2 / 2
+        entropy_h -= dictionary[i] * math.log2(dictionary[i])
+    return entropy_h / n
+
 
 def redundancy(entropy, space):
     if space:
@@ -90,42 +82,42 @@ def redundancy(entropy, space):
 
 
 print('*** Ентропія монограми без пробілів ***')
-print(entropy_h1(monogram(text_no_spaces, False)))
+print(entropy_hn(monogram(text_no_spaces, False), 1))
 print()
 print('*** Ентропія монограми з пробілами ***')
-print(entropy_h1(monogram(text_spaces, True)))
+print(entropy_hn(monogram(text_spaces, True), 1))
 print()
 print('*** Надлишковість монограми без пробілів ***')
-print(redundancy(entropy_h1(monogram(text_no_spaces, False)), False))
+print(redundancy(entropy_hn(monogram(text_no_spaces, False), 1), False))
 print()
 print('*** Надлишковість монограми з пробілами ***')
-print(redundancy(entropy_h1(monogram(text_spaces, True)), True))
+print(redundancy(entropy_hn(monogram(text_spaces, True), 1), True))
 
 print()
 print('*** Ентропія біграми без пробілів з перетином ***')
-print(entropy_h2(bigram(text_no_spaces, True)))
+print(entropy_hn(bigram(text_no_spaces, True), 2))
 print()
 print('*** Ентропія біграми без пробілів без перетину ***')
-print(entropy_h2(bigram(text_no_spaces, False))) 
+print(entropy_hn(bigram(text_no_spaces, False), 2)) 
 print()
 print('*** Надлишковість біграми без пробілів з перетином ***')
-print(redundancy(entropy_h2(bigram(text_no_spaces, True)), False))
+print(redundancy(entropy_hn(bigram(text_no_spaces, True), 2), False))
 print()
 print('*** Надлишковість біграми без пробілів без перетину ***')
-print(redundancy(entropy_h2(bigram(text_no_spaces, False)), False))
+print(redundancy(entropy_hn(bigram(text_no_spaces, False), 2), False))
 
 print()
 print('*** Ентропія біграми з пробілами з перетином ***')
-print(entropy_h2(bigram(text_spaces, True)))
+print(entropy_hn(bigram(text_spaces, True), 2))
 print()
 print('*** Ентропія біграми з пробілами без перетину ***')
-print(entropy_h2(bigram(text_spaces, False)))
+print(entropy_hn(bigram(text_spaces, False), 2))
 print()
 print('*** Надлишковість біграми з пробілами з перетином ***')
-print(redundancy(entropy_h2(bigram(text_spaces, True)), True))
+print(redundancy(entropy_hn(bigram(text_spaces, True), 2), True))
 print()
 print('*** Надлишковість біграми з пробілами без перетину ***')
-print(redundancy(entropy_h2(bigram(text_spaces, False)), True))
+print(redundancy(entropy_hn(bigram(text_spaces, False), 2), True))
 
 write_file('monogram_no_spaces.txt', monogram(text_no_spaces, False))
 write_file('monogram_spaces.txt', monogram(text_spaces, True))
@@ -134,3 +126,6 @@ write_file('bigram_no_spaces_no_intersections.txt', bigram(text_no_spaces, False
 write_file('bigram_spaces_no_intersections.txt', bigram(text_spaces, False))
 write_file('bigram_no_spaces_intersections.txt', bigram(text_no_spaces, True))
 write_file('bigram_spaces_intersections.txt', bigram(text_spaces, True))
+
+
+
